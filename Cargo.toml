@@ -1,0 +1,23 @@
+[package]
+name = "swc-plugin-console-prefix"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+anyhow = "1.0.53"
+serde = "1.0.136"
+serde_json = "1.0.79"
+swc_plugin = "0.26.1"
+
+[dev-dependencies]
+js-sys = "0.3.51"
+swc = { version = "0.124.2", features = ["plugin"] }
+swc_common = { version = "0.17.5", features = ["tty-emitter"] }
+swc_ecma_parser = "0.88.3"
+swc_ecma_transforms_testing = "0.60.0"
+
+[[example]]
+name = "usage"

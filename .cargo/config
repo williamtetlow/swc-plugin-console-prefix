@@ -1,0 +1,6 @@
+[build]
+target = "wasm32-wasi"
+
+[alias]
+test_apple = "test --target=x86_64-apple-darwin"
+test_linux = "test --target=x86_64-unknown-linux-gnu"
