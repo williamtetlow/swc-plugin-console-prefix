@@ -1,6 +1,32 @@
 # swc-plugin-console-prefix
 SWC Transform to prefix logs. Useful for adding file and line number to logs
 
+```json
+{
+    "jsc": {
+        "experimental": {
+            "plugins": [
+                ["swc-plugin-console-prefix", { "prefixPattern": "hello", "ignore": ["info"] }]
+            ]
+        }
+    }
+}
+```
+
+```js
+// test.js
+console.log('world')
+```
+
+```bash
+$ npx swc ./test.js
+```
+
+```js
+// output
+console.log('hello', 'world')
+```
+
 ## Run example
 ```sh
 # macos
