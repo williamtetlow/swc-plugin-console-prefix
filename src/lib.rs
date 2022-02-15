@@ -11,10 +11,20 @@ pub struct Config {
 
     #[serde(default = "default_prefix_pattern")]
     prefix_pattern: String,
+
+    #[serde(default)]
+    pub filename: Option<String>,
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PluginContext {
+    #[serde(default)]
+    pub filename: Option<String>,
 }
 
 fn default_prefix_pattern() -> String {
-    "default-prefix:".to_owned()
+    "[filename]".to_owned()
 }
 
 impl Default for Config {
@@ -37,22 +47,35 @@ impl TransformVisitor {
     }
 
     fn generate_prefix(&self) -> JsWord {
-        JsWord::from(self.config.prefix_pattern.to_owned())
+        let mut prefix = self.config.prefix_pattern.to_owned();
+
+        if prefix.contains("[filename]") {
+            prefix = prefix.replace(
+                "[filename]",
+                self.config.filename.as_deref().unwrap_or_default(),
+            );
+        }
+
+        JsWord::from(prefix)
     }
 
     fn add_prefix_to_log(&self, call_expr: &mut CallExpr) {
-        call_expr.args.insert(
-            0,
-            ExprOrSpread {
-                spread: None,
-                expr: Box::new(Expr::Lit(Lit::Str(Str {
-                    span: DUMMY_SP,
-                    has_escape: false,
-                    kind: StrKind::Synthesized,
-                    value: self.generate_prefix(),
-                }))),
-            },
-        );
+        let prefix = self.generate_prefix();
+
+        if !prefix.is_empty() {
+            call_expr.args.insert(
+                0,
+                ExprOrSpread {
+                    spread: None,
+                    expr: Box::new(Expr::Lit(Lit::Str(Str {
+                        span: DUMMY_SP,
+                        has_escape: false,
+                        kind: StrKind::Synthesized,
+                        value: prefix,
+                    }))),
+                },
+            );
+        }
     }
 }
 
@@ -93,10 +116,18 @@ impl VisitMut for TransformVisitor {
 /// However, this means plugin author need to handle all of serialization/deserialization
 /// steps with communicating with host. Refer `swc_plugin_macro` for more details.
 #[plugin_transform]
-pub fn process_transform(program: Program, plugin_config: String) -> Program {
-    let config: Config = serde_json::from_str(&plugin_config)
+pub fn process_transform(program: Program, plugin_config: String, context: String) -> Program {
+    let mut config: Config = serde_json::from_str(&plugin_config)
         .context("failed to parse plugin config")
         .unwrap();
+
+    let context: PluginContext = serde_json::from_str(&context)
+        .context("failed to parse plugin context")
+        .unwrap();
+
+    if config.filename.is_none() {
+        config.filename = context.filename;
+    }
 
     program.fold_with(&mut as_folder(TransformVisitor::new(config)))
 }
@@ -113,10 +144,21 @@ mod transform_visitor_tests {
 
     test!(
         ::swc_ecma_parser::Syntax::default(),
-        |_| transform_visitor(Default::default()),
-        adds_default_prefix_to_console_logs,
+        |_| transform_visitor(Config {
+            filename: Some("test.js".to_owned()),
+            ..Default::default()
+        }),
+        adds_default_prefix_when_filename_is_some,
         r#"console.log("hello world");"#,
-        r#"console.log("default-prefix:", "hello world");"#
+        r#"console.log("test.js", "hello world");"#
+    );
+
+    test!(
+        ::swc_ecma_parser::Syntax::default(),
+        |_| transform_visitor(Default::default()),
+        doesnt_add_default_prefix_when_filename_is_none,
+        r#"console.log("hello world");"#,
+        r#"console.log("hello world");"#
     );
 
     test!(
@@ -147,5 +189,17 @@ mod transform_visitor_tests {
         ignores_console_members,
         r#"console.log("hello world");"#,
         r#"console.log("hello world");"#
+    );
+
+    test!(
+        ::swc_ecma_parser::Syntax::default(),
+        |_| transform_visitor(Config {
+            prefix_pattern: "file: [filename]".to_owned(),
+            filename: Some("test.js".to_owned()),
+            ..Default::default()
+        }),
+        adds_filename,
+        r#"console.log("hello world");"#,
+        r#"console.log("file: test.js", "hello world");"#
     );
 }

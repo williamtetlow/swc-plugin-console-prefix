@@ -3,5 +3,10 @@
   "version": "0.1.0",
   "description": "SWC Transform to prefix logs. Useful for adding file and line number to logs",
   "author": "William Tetlow <oss@williamtetlow.com> (https://github.com/williamtetlow/)",
-  "license": "MIT"
+  "license": "MIT",
+  "main": "target/wasm32-wasi/release/swc_plugin_console_prefix.wasm",
+  "files": [
+    "target/wasm32-wasi/release/swc_plugin_console_prefix.wasm",
+    "README.md"
+  ]
 }

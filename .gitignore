@@ -4,3 +4,4 @@ target
 
 .swc
 node_modules
+.npmrc
