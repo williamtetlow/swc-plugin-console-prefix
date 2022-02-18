@@ -83,6 +83,7 @@ impl VisitMut for TransformVisitor {
     noop_visit_mut_type!();
 
     fn visit_mut_call_expr(&mut self, call_expr: &mut CallExpr) {
+        call_expr.visit_mut_children_with(self);
         if let Callee::Expr(expr) = &call_expr.callee {
             if let Expr::Member(member_expr) = &**expr {
                 if let (Expr::Ident(obj_id), MemberProp::Ident(prop_id)) =
