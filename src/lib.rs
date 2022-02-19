@@ -175,6 +175,17 @@ mod transform_visitor_tests {
 
     test!(
         ::swc_ecma_parser::Syntax::default(),
+        |_| transform_visitor(Config {
+            filename: Some("test.js".to_owned()),
+            ..Default::default()
+        }),
+        adds_prefix_when_nested,
+        r#"console.log("hello world", console.log("hello world"));"#,
+        r#"console.log("test.js", "hello world", console.log("test.js", "hello world"));"#
+    );
+
+    test!(
+        ::swc_ecma_parser::Syntax::default(),
         |_| transform_visitor(Default::default()),
         does_not_alter_console_table,
         r#"console.table(["apples", "oranges", "bananas"]);"#,
