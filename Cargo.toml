@@ -6,10 +6,10 @@ edition = "2021"
 [lib]
 crate-type = ["cdylib"]
 
-# [profile.release]
-# codegen-units = 1
-# lto = true
-# opt-level = "s"
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
 
 [dependencies]
 anyhow = "1.0.53"
