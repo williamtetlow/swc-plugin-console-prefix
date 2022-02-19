@@ -83,6 +83,7 @@ impl VisitMut for TransformVisitor {
     noop_visit_mut_type!();
 
     fn visit_mut_call_expr(&mut self, call_expr: &mut CallExpr) {
+        call_expr.visit_mut_children_with(self);
         if let Callee::Expr(expr) = &call_expr.callee {
             if let Expr::Member(member_expr) = &**expr {
                 if let (Expr::Ident(obj_id), MemberProp::Ident(prop_id)) =
@@ -170,6 +171,17 @@ mod transform_visitor_tests {
         adds_custom_prefix_to_console_logs,
         r#"console.log("hello world");"#,
         r#"console.log("custom-prefix:", "hello world");"#
+    );
+
+    test!(
+        ::swc_ecma_parser::Syntax::default(),
+        |_| transform_visitor(Config {
+            filename: Some("test.js".to_owned()),
+            ..Default::default()
+        }),
+        adds_prefix_when_nested,
+        r#"console.log("hello world", console.log("hello world"));"#,
+        r#"console.log("test.js", "hello world", console.log("test.js", "hello world"));"#
     );
 
     test!(
