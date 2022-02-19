@@ -5,8 +5,5 @@
   "author": "William Tetlow <oss@williamtetlow.com> (https://github.com/williamtetlow/)",
   "license": "MIT",
   "main": "target/wasm32-wasi/release/swc_plugin_console_prefix.wasm",
-  "files": [
-    "target/wasm32-wasi/release/swc_plugin_console_prefix.wasm",
-    "README.md"
-  ]
+  "files": []
 }
